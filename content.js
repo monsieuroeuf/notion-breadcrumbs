@@ -6,53 +6,8 @@
   let allItems = [];
   let sectionRanges = []; // [{start, end, label}, ...]
   let rawSections = []; // scraped data before filtering
-  let pendingReopen = false;
-  let lastUrl = window.location.href;
-
-  var REOPEN_KEY = "nbn-reopen";
 
   document.addEventListener("keydown", onKeyDown, true);
-
-  // Check if we need to reopen after a full page reload.
-  if (sessionStorage.getItem(REOPEN_KEY)) {
-    sessionStorage.removeItem(REOPEN_KEY);
-    waitForPageReady(function () { open(); });
-  }
-
-  // Watch for SPA navigation to reopen the overlay after page switch.
-  setInterval(function () {
-    if (window.location.href !== lastUrl) {
-      lastUrl = window.location.href;
-      if (pendingReopen) {
-        pendingReopen = false;
-        sessionStorage.removeItem(REOPEN_KEY);
-        waitForPageReady(function () { open(); });
-      }
-    }
-  }, 100);
-
-  function waitForPageReady(cb) {
-    var attempts = 0;
-    var check = setInterval(function () {
-      attempts++;
-
-      // Wait for the page content area to exist and have rendered blocks.
-      var content =
-        document.querySelector(".notion-page-content") ||
-        document.querySelector('[class*="page-content"]');
-      var ready =
-        content &&
-        (content.querySelector(".notion-page-block") ||
-          content.querySelector('[class*="header-block"]') ||
-          content.querySelectorAll("[data-block-id]").length > 3);
-
-      if (ready || attempts > 40) {
-        clearInterval(check);
-        // Small extra delay for database views that render progressively.
-        setTimeout(cb, 150);
-      }
-    }, 100);
-  }
 
   function getBreadcrumbText() {
     var bc = document.querySelector(".shadow-cursor-breadcrumb");
@@ -60,7 +15,7 @@
   }
 
   function onKeyDown(e) {
-    if (e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && e.key === "b") {
+    if (!e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && e.key === "F1") {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -219,37 +174,60 @@
     // Notion renders subpages specifically as .notion-page-block elements.
     // These are distinct from header blocks (.notion-header-block etc.)
     // and other block types.
-    const pageBlocks = content.querySelectorAll(".notion-page-block");
+    // Besides subpages, pick up full-page databases, inline databases and
+    // aliases (links to other pages).
+    const pageBlocks = content.querySelectorAll(
+      ".notion-page-block, .notion-alias-block, " +
+        ".notion-collection_view_page-block, .notion-collection_view-block"
+    );
 
     for (const block of pageBlocks) {
       // Skip blocks that are also header blocks (safety check).
       if (block.className.includes("header")) continue;
 
+      const isInlineDb = block.classList.contains("notion-collection_view-block");
+      const isAlias = block.classList.contains("notion-alias-block");
+
       const link = block.querySelector("a[href]");
-      const title = cleanText(block);
+      const title = isInlineDb ? inlineDbTitle(block) : cleanText(block);
       if (!title || seen.has(title)) continue;
       seen.add(title);
 
       // Get href from <a> tag, or construct it from the block's data-block-id.
       // Database/table rows don't have <a> tags but do have block IDs that
       // can be used to navigate directly: /block-id-without-dashes
+      // Aliases are the exception: their own block ID points at the alias,
+      // not its target, so they only navigate via a real link.
       var href = link ? link.getAttribute("href") : null;
-      if (!href) {
+      if (!href && !isAlias) {
         const blockId = block.getAttribute("data-block-id");
         if (blockId) {
           href = "/" + blockId.replace(/-/g, "");
         }
       }
 
+      // Link-less aliases fall back to scrolling to the block.
       items.push({
-        type: "subpage",
+        type: !href && !link ? "header" : "subpage",
+        kind: isInlineDb ? "database" : isAlias ? "alias" : "page",
         title,
+        level: 1,
         href,
         element: link || block,
       });
     }
 
     return items;
+  }
+
+  // Inline databases render the title in a dedicated element, with the rows
+  // and view tabs as noise around it; avoid concatenating all of that text.
+  function inlineDbTitle(block) {
+    const t =
+      block.querySelector('[class*="collection-view-title"]') ||
+      block.querySelector('[placeholder="Untitled"]') ||
+      block.querySelector('[class*="collection_view-title"]');
+    return t ? cleanText(t) : "";
   }
 
   function cleanText(el) {
@@ -270,9 +248,7 @@
       return;
     }
 
-    // Mark for reopen — both in-memory (SPA) and sessionStorage (full reload).
-    pendingReopen = true;
-    sessionStorage.setItem(REOPEN_KEY, "1");
+    // Always close before page navigation.
     close();
 
     // Prefer clicking <a> elements — Notion's SPA router intercepts these
@@ -499,7 +475,11 @@
   function itemIcon(item) {
     if (item.type === "parent") return "&#8592;";   // ←
     if (item.type === "header") return "&#167;";    // §
-    if (item.type === "subpage") return "&#8594;";  // →
+    if (item.type === "subpage" || item.kind) {
+      if (item.kind === "database") return "&#9638;"; // ▦
+      if (item.kind === "alias") return "&#8599;";    // ↗
+      return "&#8594;";                               // →
+    }
     return "";
   }
 

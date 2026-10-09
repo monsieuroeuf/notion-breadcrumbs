@@ -5,7 +5,7 @@
   "description": "Navigate Notion page hierarchy via Ctrl+B",
   "content_scripts": [
     {
-      "matches": ["*://www.notion.so/*"],
+      "matches": ["*://www.notion.so/*","*://app.notion.so/*","*://app.notion.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"

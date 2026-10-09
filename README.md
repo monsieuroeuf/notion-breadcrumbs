@@ -16,7 +16,7 @@ Works in Chrome, Brave, Edge, Safari, and any Chromium-based browser.
 - **On this page** — jump to any heading in the current document
 - **Subpages** — navigate into child pages
 - **Search/filter** — type to instantly filter the list
-- **Persistent overlay** — stays open when switching between pages so you can keep navigating
+- **Focused overlay** — closes after navigation so it never lingers on the next page
 - **Dark mode** — automatically matches Notion's theme
 
 ## Installation
@@ -145,7 +145,7 @@ The navigator shows up to three sections depending on what's available on the cu
 - **On this page** — headings (H1, H2, H3) in the current document. Selecting one scrolls to it. Indentation reflects the heading level.
 - **Subpages** — child pages nested under the current page. Use `→` or `Enter` to go in.
 
-When you navigate to a parent or subpage, the navigator reopens automatically on the new page so you can keep moving through the hierarchy.
+When you navigate to a parent or subpage, the navigator closes immediately. Press **Ctrl+B** again on the destination page to continue navigating.
 
 ## How it works
 
