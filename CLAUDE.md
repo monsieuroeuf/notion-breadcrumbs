@@ -28,10 +28,10 @@ The scrapers depend on Notion's undocumented DOM, which is the most likely thing
 
 - Breadcrumbs: `.shadow-cursor-breadcrumb` (fallback `[class*="breadcrumb"]`). Items with an `svg` child are treated as controls and skipped; the last item is dropped as the current page.
 - Content root: `.notion-page-content`.
-- Subpages: `.notion-page-block` (skipping any whose class contains "header").
+- Subpages section: `.notion-page-block` (subpages), `.notion-collection_view_page-block` (full-page databases), `.notion-collection_view-block` (inline databases), `.notion-alias-block` (aliases), skipping any whose class contains "header". Aliases never use the block-ID URL fallback, since that would point at the alias itself.
 - Headings: `h1`–`h4` plus `[class*="header-block"]` selectors. Note the level mapping in `scrapeHeaders` is offset (`H2`→1, `H3`→2, `H4`→3, other elements fall back to class-name hints).
 
 ## Gotchas
 
-- The uncommitted working tree changes the trigger key: `content.js` currently listens for a bare **F1** (`onKeyDown`, top of file), while `README.md`, the manifest `description`, and the troubleshooting section still say **Ctrl+B**. Keep them consistent when changing the shortcut.
+- The trigger key is a bare **F1** (`onKeyDown`, top of `content.js`). The README, manifest `description` and troubleshooting section mention it too, so keep them consistent when changing it.
 - `README.md` says the repo folder is `notion-breadcrumb-nav` in install instructions, but the repo directory is `notion-breadcrumbs`.

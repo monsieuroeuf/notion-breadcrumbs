@@ -1,6 +1,6 @@
 # Notion Breadcrumb Navigator
 
-A lightweight browser extension that adds keyboard-driven navigation to Notion. Press **Ctrl+B** to open a command palette that lets you jump between parent pages, headings on the current page, and subpages — without touching the mouse.
+A lightweight browser extension that adds keyboard-driven navigation to Notion. Press **F1** to open a command palette that lets you jump between parent pages, headings on the current page, and subpages — without touching the mouse.
 
 Works in Chrome, Brave, Edge, Safari, and any Chromium-based browser.
 
@@ -14,7 +14,7 @@ Works in Chrome, Brave, Edge, Safari, and any Chromium-based browser.
 
 - **Parent pages** — navigate up the page hierarchy
 - **On this page** — jump to any heading in the current document
-- **Subpages** — navigate into child pages
+- **Subpages** — navigate into child pages, databases and aliases
 - **Search/filter** — type to instantly filter the list
 - **Focused overlay** — closes after navigation so it never lingers on the next page
 - **Dark mode** — automatically matches Notion's theme
@@ -47,7 +47,7 @@ Click the green **Code** button on GitHub, then **Download ZIP**. Extract the ZI
 3. Click **Load unpacked**
 4. Select the `notion-breadcrumb-nav` folder (the one containing `manifest.json`)
 
-The extension is now active. Navigate to any [Notion](https://www.notion.so) page and press **Ctrl+B** to try it.
+The extension is now active. Navigate to any [Notion](https://www.notion.so) page and press **F1** to try it.
 
 #### Updating
 
@@ -120,13 +120,13 @@ Pull the latest changes (or re-download the ZIP), then rebuild in Xcode by click
 
 ## Usage
 
-Press **Ctrl+B** on any Notion page to open the navigator.
+Press **F1** on any Notion page to open the navigator.
 
 ### Keyboard shortcuts
 
 | Key                   | Action                                 |
 | --------------------- | -------------------------------------- |
-| `Ctrl+B`              | Open / close the navigator             |
+| `F1`                  | Open / close the navigator             |
 | `↑` `↓`               | Move selection up / down               |
 | `Enter`               | Open the selected item                 |
 | `←`                   | Navigate to selected parent page       |
@@ -143,9 +143,9 @@ The navigator shows up to three sections depending on what's available on the cu
 
 - **Parent pages** — ancestors in the page hierarchy (the breadcrumb trail). Use `←` or `Enter` to go up.
 - **On this page** — headings (H1, H2, H3) in the current document. Selecting one scrolls to it. Indentation reflects the heading level.
-- **Subpages** — child pages nested under the current page. Use `→` or `Enter` to go in.
+- **Subpages** — child pages, databases (full-page and inline) and aliases (links to other pages) on the current page. Use `→` or `Enter` to go in.
 
-When you navigate to a parent or subpage, the navigator closes immediately. Press **Ctrl+B** again on the destination page to continue navigating.
+When you navigate to a parent or subpage, the navigator closes immediately. Press **F1** again on the destination page to continue navigating.
 
 ## How it works
 
@@ -164,8 +164,8 @@ No data leaves your browser. The extension only reads the DOM of the Notion page
 **The navigator doesn't open:**
 Make sure you're on `www.notion.so` (not a custom domain or the desktop app). Check that the extension is enabled on the extensions page. On Safari, make sure "Allow unsigned extensions" is enabled (it resets when Safari quits).
 
-**Ctrl+B does something else:**
-Ctrl+B normally triggers bold text in Notion. This extension overrides that. You can still bold text using the toolbar or by typing `**text**` in Markdown.
+**F1 opens browser help instead:**
+Some browsers or keyboards map F1 to help, or require `Fn` to be held for function keys. Hold `Fn` (or enable "Use F1, F2, etc. keys as standard function keys" in your OS keyboard settings).
 
 **Parent pages don't show up:**
 Parent pages are read from Notion's breadcrumb bar. If you're on a top-level page (no parents), the section won't appear. If it's missing on a nested page, Notion may have changed its DOM structure — please open an issue.
