@@ -174,35 +174,57 @@
     // Notion renders subpages specifically as .notion-page-block elements.
     // These are distinct from header blocks (.notion-header-block etc.)
     // and other block types.
-    // Besides subpages, pick up full-page databases, inline databases and
-    // aliases (links to other pages).
+    // Besides subpages, pick up full-page databases, inline databases,
+    // aliases ("link to page" blocks) and inline @-mentions of pages.
     const pageBlocks = content.querySelectorAll(
       ".notion-page-block, .notion-alias-block, " +
-        ".notion-collection_view_page-block, .notion-collection_view-block"
+        ".notion-collection_view_page-block, .notion-collection_view-block, " +
+        "a.notion-page-mention-token"
     );
 
     for (const block of pageBlocks) {
       // Skip blocks that are also header blocks (safety check).
       if (block.className.includes("header")) continue;
 
-      const isInlineDb = block.classList.contains("notion-collection_view-block");
-      const isAlias = block.classList.contains("notion-alias-block");
+      const isMention = block.classList.contains("notion-page-mention-token");
+      // Mentions inside database rows/cells are row data, not navigation.
+      if (isMention && block.closest(".notion-collection_view-block")) continue;
 
-      const link = block.querySelector("a[href]");
-      const title = isInlineDb ? inlineDbTitle(block) : cleanText(block);
+      const isInlineDb = block.classList.contains("notion-collection_view-block");
+      const isAlias = isMention || block.classList.contains("notion-alias-block");
+
+      const isRow = block.classList.contains("notion-collection-item");
+      const rowTitle = isRow ? collectionItemTitle(block) : null;
+
+      // Database rows: only trust a link that wraps the title (list/board
+      // views); other links in a row belong to properties (URLs, relations).
+      const link = isMention
+        ? block
+        : isRow
+        ? rowTitle && rowTitle.closest("a[href]")
+        : block.querySelector("a[href]");
+      const title = isInlineDb
+        ? inlineDbTitle(block)
+        : isMention
+        ? cleanText(block.querySelector(".notion-page-mention-token__title") || block)
+        : isRow
+        ? rowTitle ? textWithoutIcon(rowTitle) : cleanText(block)
+        : cleanText(block);
       if (!title || seen.has(title)) continue;
       seen.add(title);
 
       // Get href from <a> tag, or construct it from the block's data-block-id.
       // Database/table rows don't have <a> tags but do have block IDs that
-      // can be used to navigate directly: /block-id-without-dashes
+      // can be used to navigate directly: /block-id-without-dashes, or
+      // /p/block-id-without-dashes on app.notion.com (where /<id> is a 404).
       // Aliases are the exception: their own block ID points at the alias,
       // not its target, so they only navigate via a real link.
       var href = link ? link.getAttribute("href") : null;
       if (!href && !isAlias) {
         const blockId = block.getAttribute("data-block-id");
         if (blockId) {
-          href = "/" + blockId.replace(/-/g, "");
+          const prefix = location.pathname.startsWith("/p/") ? "/p/" : "/";
+          href = prefix + blockId.replace(/-/g, "");
         }
       }
 
@@ -228,6 +250,24 @@
       block.querySelector('[placeholder="Untitled"]') ||
       block.querySelector('[class*="collection_view-title"]');
     return t ? cleanText(t) : "";
+  }
+
+  // Database rows contain every visible property; find just the title.
+  // List/board/gallery views render it as an editable leaf; table views put
+  // it in the cell that holds the row's page icon.
+  function collectionItemTitle(row) {
+    return (
+      row.querySelector("[data-content-editable-leaf]") ||
+      (row.querySelector(".notion-record-icon") &&
+        row.querySelector(".notion-record-icon").closest(".notion-table-view-cell")) ||
+      null
+    );
+  }
+
+  function textWithoutIcon(el) {
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".notion-record-icon").forEach((i) => i.remove());
+    return cleanText(clone);
   }
 
   function cleanText(el) {

@@ -28,10 +28,12 @@ The scrapers depend on Notion's undocumented DOM, which is the most likely thing
 
 - Breadcrumbs: `.shadow-cursor-breadcrumb` (fallback `[class*="breadcrumb"]`). Items with an `svg` child are treated as controls and skipped; the last item is dropped as the current page.
 - Content root: `.notion-page-content`.
-- Subpages section: `.notion-page-block` (subpages), `.notion-collection_view_page-block` (full-page databases), `.notion-collection_view-block` (inline databases), `.notion-alias-block` (aliases), skipping any whose class contains "header". Aliases never use the block-ID URL fallback, since that would point at the alias itself.
+- Subpages section: `.notion-page-block` (subpages), `.notion-collection_view_page-block` (full-page databases), `.notion-collection_view-block` (inline databases), `.notion-alias-block` (aliases), `a.notion-page-mention-token` (inline @-mentions of pages, shown as aliases; ones inside `.notion-collection_view-block` are skipped as row data), skipping any whose class contains "header". Aliases never use the block-ID URL fallback, since that would point at the alias itself.
+- Database rows (`.notion-page-block.notion-collection-item`): the title comes from `collectionItemTitle` (`[data-content-editable-leaf]` in list/board views, else the `.notion-table-view-cell` holding `.notion-record-icon` in table views). Only a link wrapping the title is used; other row links belong to properties, so table rows navigate via the block-ID URL. That URL is `/p/<id>` when the current path starts with `/p/` (app.notion.com, where bare `/<id>` 404s) and `/<id>` otherwise.
+- Inline databases with "hide title" on have no title element, so `inlineDbTitle` returns "" and they are skipped.
 - Headings: `h1`–`h4` plus `[class*="header-block"]` selectors. Note the level mapping in `scrapeHeaders` is offset (`H2`→1, `H3`→2, `H4`→3, other elements fall back to class-name hints).
 
 ## Gotchas
 
 - The trigger key is a bare **F1** (`onKeyDown`, top of `content.js`). The README, manifest `description` and troubleshooting section mention it too, so keep them consistent when changing it.
-- `README.md` says the repo folder is `notion-breadcrumb-nav` in install instructions, but the repo directory is `notion-breadcrumbs`.
+- `README.md` has an "About this fork" section listing differences from upstream (felixbrock/notion-breadcrumbs); keep it current when adding fork-only behaviour.
